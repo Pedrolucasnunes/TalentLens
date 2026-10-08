@@ -1,4 +1,4 @@
-# TalentLens — Backend (agente de IA)
+# TalentLens: Backend
 
 API em Python (FastAPI) que analisa a aderência de um currículo a uma vaga:
 
@@ -15,9 +15,10 @@ currículo + vaga → embeddings (text-embedding-3-small) → similaridade de co
 ```bash
 cd backend
 python -m venv .venv
-.venv\Scripts\activate        # Windows
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-copy .env.example .env        # e preencher OPENAI_API_KEY
+cp .env.example .env             # Windows: copy .env.example .env
+# preencher OPENAI_API_KEY no .env
 uvicorn main:app --reload
 ```
 
@@ -26,7 +27,7 @@ O servidor serve tudo em um lugar só:
 | Rota | O que é |
 |---|---|
 | `/` | Landing page |
-| `/app` | Interface do agente (colar vaga + currículo → análise) |
+| `/app` | Interface de análise (colar vaga + currículo → análise) |
 | `/docs` | Docs interativas da API (Swagger) |
 
 ## Endpoints da API
@@ -35,7 +36,7 @@ O servidor serve tudo em um lugar só:
 |---|---|---|
 | `POST /analisar` | `{curriculo, vaga}` | `{score, parecer, pontos_fortes, pontos_fracos, recomendacao}` |
 | `POST /embeddings` | `{texto}` | `{modelo, dimensoes, embedding}` |
-| `GET /health` | — | `{status: "ok"}` |
+| `GET /health` | (sem entrada) | `{status: "ok"}` |
 
 ### Exemplo
 
@@ -62,17 +63,17 @@ Resposta:
 }
 ```
 
-O `score` é a similaridade de cosseno entre os embeddings do currículo e da vaga, em escala 0–100. O parecer é gerado pelo LLM recebendo os dois textos e o score como contexto.
+O `score` é a similaridade de cosseno entre os embeddings do currículo e da vaga, em escala de 0 a 100. O parecer é gerado pelo LLM recebendo os dois textos e o score como contexto.
 
 ## Memória de análises (RAG)
 
-Não é um endpoint novo — é o `POST /analisar` enriquecido. Quando a memória vetorial está configurada, cada análise:
+Não é um endpoint novo: é o `POST /analisar` enriquecido. Quando a memória vetorial está configurada, cada análise:
 
 1. **Recupera** do Postgres (pgvector) as 3 análises anteriores cujos currículos são mais similares ao atual (`memoria.buscar_contexto_similar`)
-2. Inclui os pareceres delas no prompt do LLM como **calibração** — vaga, score e recomendação de cada uma
+2. Inclui os pareceres delas no prompt do LLM como **calibração**: vaga, score e recomendação de cada uma
 3. **Salva** a análise concluída (embedding + parecer) para servir de contexto às próximas (`memoria.salvar_analise`)
 
-**Degradação graciosa:** sem `SUPABASE_URL`/`SUPABASE_SERVICE_KEY` no `.env` — ou com o banco fora do ar — o `/analisar` funciona normalmente, só que sem o contexto histórico. A ausência da memória nunca quebra a análise.
+**Degradação graciosa:** sem `SUPABASE_URL`/`SUPABASE_SERVICE_KEY` no `.env`, ou com o banco fora do ar, o `/analisar` funciona normalmente, só que sem o contexto histórico. A ausência da memória nunca quebra a análise.
 
 Para ativar:
 
@@ -87,7 +88,7 @@ pip install -r requirements-dev.txt
 pytest -v
 ```
 
-As chamadas à OpenAI e ao banco são simuladas nos testes — nada de custo de API, chave ou banco real necessários. O CI (GitHub Actions) roda a suíte a cada push.
+As chamadas à OpenAI e ao banco são simuladas nos testes: nada de custo de API, chave ou banco real necessários. O CI (GitHub Actions) roda a suíte a cada push e pull request.
 
 ## Configuração
 
