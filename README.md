@@ -9,6 +9,8 @@ Análise de aderência entre currículo e vaga com IA. A partir dos dois textos,
 
 Pipeline em Python puro, sem framework de orquestração: embeddings, similaridade de cosseno, recuperação de análises anteriores (RAG com pgvector) e parecer via LLM.
 
+**Objetivo:** evoluir para um agente de triagem, em que o próprio modelo decide quais ferramentas usar para avaliar cada candidato. A versão atual é a primeira etapa desse caminho: um pipeline de RAG em que as etapas seguem uma ordem fixa, definida no código ([detalhes](#de-pipeline-a-agente)).
+
 ## Como funciona
 
 ```
@@ -16,7 +18,7 @@ Currículo (texto) + Descrição da vaga (texto)
         ↓
 Embeddings dos dois textos (OpenAI text-embedding-3-small)
         ↓
-Score: similaridade de cosseno entre os dois embeddings (numpy, escala 0–100)
+Score: similaridade de cosseno entre os dois embeddings (numpy, escala de 0 a 100)
         ↓
 Recupera as 3 análises anteriores de currículos mais parecidos (Postgres + pgvector)
         ↓
@@ -56,7 +58,19 @@ A memória vetorial é opcional: sem banco configurado, a análise roda normalme
 - Considerar a vaga na recuperação de análises e aplicar um limiar de similaridade
 - Usar como calibração apenas análises revisadas por uma pessoa
 - Conjunto de avaliação com pares currículo × vaga de resultado conhecido, para medir a qualidade das recomendações
-- Evoluir para um agente com tool calling, em que o modelo decide quando buscar análises anteriores ou consultar requisitos da vaga
+- Evoluir para um agente com tool calling (ver abaixo)
+
+## De pipeline a agente
+
+Hoje, quem define a ordem das etapas é o código: toda análise passa pelos mesmos passos, sempre na mesma sequência. Em um agente, quem decide é o modelo, em loop, escolhendo quais ferramentas chamar até concluir a avaliação.
+
+Ferramentas planejadas para o agente:
+
+- `buscar_analises_similares`: buscar calibração só quando fizer sentido, em vez de em toda análise
+- `extrair_requisitos_da_vaga`: separar requisitos obrigatórios de diferenciais antes de avaliar
+- `consultar_curriculo`: buscar um trecho específico do currículo quando surgir uma dúvida
+
+A implementação prevista usa o tool calling da API da OpenAI, mantendo o código em Python puro, sem framework de orquestração.
 
 ## Arquitetura
 
