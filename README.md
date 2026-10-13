@@ -112,7 +112,3 @@ A landing em `landing/` foi criada para validar o interesse de recrutadores ante
 ## Status
 
 MVP funcional. A evolução planejada está em [Próximos passos](#próximos-passos).
-
-## Licença
-
-MIT
